@@ -1,0 +1,45 @@
+
+services:
+  app:
+    build:
+      # build dockerfile inside or dir
+      context: .
+      args:
+        - DEV=true
+    env_file:
+      - .env 
+    # map between ports on local and docker
+    ports:
+      - "8000:8000"
+    # map project dirs , to make updates in local reflects to docker
+    # need not to rebuild it every time
+    volumes:
+      - ./app:/app
+      - dev-static-data:/vol/web
+    command: >
+      sh -c "
+            python3 manage.py migrate &&
+            python3 manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=LibraryDB
+      - DB_USER=admin
+      - DB_PASS=admin
+      - DEBUG=1
+    
+    depends_on:
+      - db
+
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=LibraryDB
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+volumes:
+  dev-db-data:
+  # map static data to file in system
+  dev-static-data:
