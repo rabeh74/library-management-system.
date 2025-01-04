@@ -53,6 +53,23 @@ class UserModelTests(TestCase):
         user = create_user(**user_params)
         self.assertEqual(str(user), user.email)
 
+class UserPublicAPITests(APITestCase):
+    def setUp(self):
+        self.user_params = {
+            'email':'test@emai.com',
+            'password':'testpass',
+        }
+    
+    def test_create_user(self):
+        url = reverse('user:create_user')
+        data = self.user_params
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = get_user_model().objects.get(email=data['email'])
+        self.assertTrue(user.check_password(data['password']))
+        self.assertNotIn('password', response.data)
+        self.assertEqual(response.data['email'], data['email'])
+
 class UserAPITests(APITestCase):
     def setUp(self):
         # Create a test user
@@ -61,8 +78,9 @@ class UserAPITests(APITestCase):
             'password':'testpass',
         }
         self.user =create_user(**self.user_params)
-        self.login_url = "/api/token/"
-        self.refresh_url = "/api/token/refresh/"
+        self.login_url = reverse('user:token_obtain_pair')
+        self.refresh_url = reverse('user:token_refresh')
+        self.user_update_url = reverse('user:update_user', args=[self.user.id])
 
     def test_successful_login(self):
         """
@@ -98,17 +116,26 @@ class UserAPITests(APITestCase):
         response = self.client.post(self.refresh_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
+    
+    def test_user_update(self):
+        """
+        Ensure a user can update their details.
+        """
+        new_data = {
+            "full_name": "New Name",
+            "phone_number": "1234567890" ,
+            "password": "newpassword",
+        }
+        self.client.force_authenticate(user=self.user)
+        url = self.user_update_url
+        response = self.client.put(url, new_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, new_data["full_name"])
+        self.assertEqual(self.user.phone_number, new_data["phone_number"])
+        self.assertTrue(self.user.check_password(new_data["password"]))
+        self.assertNotIn("password", response.data)
+        self.assertEqual("test@emai.com", self.user.email)
 
-    # def test_token_access_protection(self):
-    #     """
-    #     Ensure access to protected endpoints requires a valid token.
-    #     """
-    #     url = "/api/some-protected-endpoint/"  # Replace with an actual protected endpoint
-    #     response = self.client.get(url)
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    #     # Add valid token to Authorization header
-    #     refresh = RefreshToken.for_user(self.user)
-    #     self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
-    #     response = self.client.get(url)
-    #     self.assertNotEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    
