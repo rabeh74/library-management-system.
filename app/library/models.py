@@ -7,10 +7,12 @@ def upload_to_authors(instance, filename):
         ext = filename.split('.')[-1]
         filename = '{}.{}'.format(uuid.uuid4().hex, ext)
         return 'authors/{}/{}'.format(instance.name, filename)
+        
 def upload_to_books(instance, filename):
         ext = filename.split('.')[-1]
         filename = '{}.{}'.format(uuid.uuid4().hex, ext)
         return 'books/{}/{}'.format(instance.title, filename)
+
 class Author(models.Model):
     name = models.CharField(max_length=255)
     bio = models.TextField(blank=True, null=True)
@@ -34,7 +36,7 @@ class Book(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     published_date = models.DateField(blank=True, null=True)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE , related_name='books' , null=True , blank=True)  
     categories = models.ManyToManyField(Category)
     cover = models.ImageField(upload_to=upload_to_books, blank=True, null=True)
 
