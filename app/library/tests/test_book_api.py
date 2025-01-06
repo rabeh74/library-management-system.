@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 import tempfile
-from library.models import Book
+from library.models import Book , Category , Author
 
 def create_user(**params):
     return get_user_model().objects.create_user(**params)
@@ -200,6 +200,79 @@ class TestBookApi(APITestCase):
         self.assertEqual(response.data['title'] , 'test book updated')
         self.assertIsNotNone(response.data['cover'])
     
+    def test_delete_book(self):
+        url = reverse('library:book-list')
+        data = {
+            'title':'test book',
+            'description':'test description',
+            'author':{
+                'name':'test author',
+                'bio':'test bio',
+                'birth_date':'2021-01-01',
+            },
+            'categories':[
+                {
+                    'name':'test category',
+                    'description':'test description',
+                }
+            ],
+            'published_date':'2021-01-01',
+        }
+        response = self.client.post(url , data , format='json')
+        url = reverse('library:book-detail' , kwargs={'pk':response.data['id']})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code , status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Book.objects.count() , 0)
+    
+    def test_filter_book(self):
+        author1 = Author.objects.create(name='test author')
+        category1 = Category.objects.create(name='fiction')
+
+        author2 = Author.objects.create(name='test author 2')
+        category2 = Category.objects.create(name='since')
+
+        category3 = Category.objects.create(name='football')
+
+        book1 = Book.objects.create(title='test book 1', published_date='2021-01-01', author=author1)
+        book1.categories.add(category1)
+
+        book2 = Book.objects.create(title='test book 2', published_date='2021-02-01', author=author1)
+        book2.categories.add(category2)
+        book2.categories.add(category1)
+
+        book3 = Book.objects.create(title='test book 3', published_date='2021-01-01', author=author2)
+        book3.categories.add(category2)
+        book3.categories.add(category3)
+
+        url = reverse('library:book-list')
+        response = self.client.get(url + '?author=test author')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 3)
+        self.assertEqual(response.data[0]['title'] , 'test book 1')
+        self.assertEqual(response.data[1]['title'] , 'test book 2')
+
+        response = self.client.get(url + '?categories=fiction')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 2)
+        self.assertEqual(response.data[0]['title'] , 'test book 1')
+        self.assertEqual(response.data[1]['title'] , 'test book 2')
+
+        response = self.client.get(url + '?categories=since')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 2)
+        self.assertEqual(response.data[0]['title'] , 'test book 2')
+
+        response = self.client.get(url + '?title=test book 1')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 1)
+        self.assertEqual(response.data[0]['title'] , 'test book 1')
+        
+        response = self.client.get(url + '?published_date=2021-01-01')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 2)
+        self.assertEqual(response.data[0]['title'] , 'test book 1')
+        self.assertEqual(response.data[1]['title'] , 'test book 3')
+        
 
 
 

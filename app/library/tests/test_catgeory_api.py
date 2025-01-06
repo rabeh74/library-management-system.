@@ -75,3 +75,22 @@ class TestCategoryAPI(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code , status.HTTP_204_NO_CONTENT)
         self.assertEqual(Category.objects.count() , 0)
+    
+    def test_filter_category(self):
+        url = reverse('library:category-list')
+        data = {
+            'name':'since',
+            'description':'test description',
+        }
+        data2 = {
+            'name':'footabl',
+            'description':'test description2',
+        }
+        category = Category.objects.create(**data)
+        category2 = Category.objects.create(**data2)
+        url = url + '?name=since'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 1)
+        self.assertEqual(response.data[0]['name'] , 'since')
+

@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from library.models import Author
+from library.models import Author , Category , Book
 from django.test import TestCase
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
@@ -83,5 +83,24 @@ class TestAuthorAPI(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code , status.HTTP_204_NO_CONTENT)
         self.assertEqual(Author.objects.count() , 0)
+    
+    def test_filter_author(self):
+        url = reverse('library:author-list')
+        data = {
+            'name':'ahmed',
+            'bio':'test bio',
+            'birth_date':'2021-01-01',
+        }
+        data2 = {  
+            'name':'mohamed',
+            'bio':'test bio2',
+            'birth_date':'2021-01-02',
+        }
+        author = Author.objects.create(**data)
+        author2 = Author.objects.create(**data2)
+        response = self.client.get(url , {'name':'ahmed'})
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 1)
+        self.assertEqual(response.data[0]['name'] , 'ahmed')
     
 
