@@ -233,7 +233,7 @@ class TestBookApi(APITestCase):
 
         category3 = Category.objects.create(name='football')
 
-        book1 = Book.objects.create(title='test book 1', published_date='2021-01-01', author=author1)
+        book1 = Book.objects.create(title='test book 1', published_date='2022-01-01', author=author1)
         book1.categories.add(category1)
 
         book2 = Book.objects.create(title='test book 2', published_date='2021-02-01', author=author1)
@@ -269,10 +269,21 @@ class TestBookApi(APITestCase):
         
         response = self.client.get(url + '?published_date=2021-01-01')
         self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 1)
+        self.assertEqual(response.data[0]['title'] , 'test book 3')
+
+        response = self.client.get(url + '?published_date__gt=2021-01-01')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
         self.assertEqual(len(response.data) , 2)
         self.assertEqual(response.data[0]['title'] , 'test book 1')
-        self.assertEqual(response.data[1]['title'] , 'test book 3')
+        self.assertEqual(response.data[1]['title'] , 'test book 2')
+
+        response = self.client.get(url + '?published_date__lt=2021-02-01')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(len(response.data) , 1)
+        self.assertEqual(response.data[0]['title'] , 'test book 3')
         
+
 
 
 

@@ -5,11 +5,13 @@ class BookFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr='icontains')
     author = django_filters.CharFilter(method='filter_by_author_name')
     published_date = django_filters.DateFilter()
+    published_date__gt = django_filters.DateFilter(field_name='published_date', lookup_expr='gt')
+    published_date__lt = django_filters.DateFilter(field_name='published_date', lookup_expr='lt')
     categories = django_filters.CharFilter(method='filter_by_category_name')
 
     class Meta:
         model = Book
-        fields = ['title', 'author', 'published_date', 'categories']
+        fields = ['title', 'author', 'published_date', 'categories' , 'published_date__gt' , 'published_date__lt']
     
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
