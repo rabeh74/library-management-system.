@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .serializers import BookSerializer , CategorySerializer , AuthorSerializer 
+from .serializers import BookSerializer , CategorySerializer , AuthorSerializer , MemberSerializer
 from rest_framework import viewsets , permissions , authentication
 from .models import Book , Category , Author , Member , Borrow , Review
 from rest_framework.viewsets import ModelViewSet
@@ -23,6 +23,12 @@ class CategoryViewSet(ModelViewSet):
 class AuthorViewSet(ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [authentication.TokenAuthentication]
+
+class MemberViewSet(ModelViewSet):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [authentication.TokenAuthentication]
 

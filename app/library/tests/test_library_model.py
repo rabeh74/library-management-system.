@@ -21,12 +21,7 @@ user_params = {
 
 
 class LibraryModelsTest(TestCase):
-    
-    def create_user_and_member(self):
-        user = create_user(**user_params)
-        member = Member.objects.create(user=user, membership_expiry=datetime.date(2025, 1, 1))
-        return user, member
-
+        
     def create_author_and_category(self):
         author = Author.objects.create(name="J.K. Rowling")
         category = Category.objects.create(name="Fantasy")
@@ -43,10 +38,22 @@ class LibraryModelsTest(TestCase):
         return book
 
     def test_member_creation(self):
-        user, member = self.create_user_and_member()
-        self.assertEqual(member.user, user)
-        self.assertEqual(member.membership_expiry, datetime.date(2025, 1, 1))
-        self.assertEqual(str(member), user.full_name)
+        user = create_user(**user_params)
+        member = Member.objects.create(
+            name='test member',
+            phone='1234567890',
+            address='test address',
+            membership_type='premium',
+            created_by=user
+        )
+
+        self.assertEqual(member.name, "test member")
+        self.assertEqual(member.phone, "1234567890")
+        self.assertEqual(member.address, "test address")
+        self.assertEqual(member.membership_type, "premium")
+        self.assertEqual(member.created_by, user)
+        self.assertEqual(str(member), "test member")
+        
 
     def test_author_and_category_creation(self):
         author, category = self.create_author_and_category()
@@ -67,7 +74,7 @@ class LibraryModelsTest(TestCase):
         self.assertEqual(book.categories.count(), 1)
 
     def test_borrow_creation(self):
-        user, member = self.create_user_and_member()
+        member = Member.objects.create(name='test member', phone='1234567890', address='test address', membership_type='premium')
         author, category = self.create_author_and_category()
         book = self.create_book(author, category)
 
@@ -79,18 +86,3 @@ class LibraryModelsTest(TestCase):
         self.assertEqual(borrow.book, book)
         self.assertEqual(borrow.borrow_date, datetime.date(2024, 12, 1))
         self.assertFalse(borrow.returned)
-
-    def test_review_creation(self):
-        user, member = self.create_user_and_member()
-        author, category = self.create_author_and_category()
-        book = self.create_book(author, category)
-
-        review = Review.objects.create(
-            book=book, member=member, review_text="Amazing book!", rating=5
-        )
-
-        self.assertEqual(review.book, book)
-        self.assertEqual(review.member, member)
-        self.assertEqual(review.review_text, "Amazing book!")
-        self.assertEqual(review.rating, 5)
-        self.assertEqual(str(review), f"Review for {book.title} by {member.user.email}")

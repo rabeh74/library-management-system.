@@ -54,7 +54,17 @@ class BookSerializer(serializers.ModelSerializer):
         return instance
     
 
+class MemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = ['id','name', 'phone', 'address', 'membership_type', 'created_at', 'created_by']
     
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['created_by'] = user
+        return Member.objects.create(**validated_data)
+    
+
 
     
     

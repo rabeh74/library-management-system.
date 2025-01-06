@@ -2,6 +2,11 @@ from django.db import models
 import uuid
 from user.models import CustomUser
 import datetime
+from django.utils.timezone import now
+
+from django.db import models
+from django.conf import settings
+
 
 def upload_to_authors(instance, filename):
         ext = filename.split('.')[-1]
@@ -44,14 +49,26 @@ class Book(models.Model):
         return self.title
 
 class Member(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="member_profile")
-    date_joined = models.DateField(auto_now_add=True)
-    membership_expiry = models.DateField(null=True, blank=True)
-    fine_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    borrowed_books = models.ManyToManyField(Book, blank=True, related_name='borrowers')
+    name = models.CharField(max_length=255 , default='Anonymous')
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    membership_type = models.CharField(
+        max_length=50,
+        choices=[('regular', 'Regular'), ('premium', 'Premium')],
+        default='regular'
+    )
+    created_at = models.DateTimeField(default=now)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_members',
+    )
 
     def __str__(self):
-        return self.user.full_name or self.user.email
+        return self.name
+
 
 class Borrow(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="borrows")
