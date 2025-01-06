@@ -12,6 +12,8 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
         fields = ['name', 'bio', 'birth_date', 'profile_picture']
 
+
+
 class BookSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many = True , required = False)
     author = AuthorSerializer(required = False)
@@ -63,7 +65,12 @@ class MemberSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         validated_data['created_by'] = user
         return Member.objects.create(**validated_data)
-    
+
+class BorrowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrow
+        fields = ['id','member', 'book', 'borrow_date', 'return_date', 'returned']
+
 
 
     
