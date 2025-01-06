@@ -1,5 +1,5 @@
 import django_filters
-from .models import Book , Category , Author
+from .models import Book , Category , Author , Member , Borrow , MEMBERSHIP_TYPE_CHOICES
 
 class BookFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr='icontains')
@@ -36,7 +36,7 @@ class CategoryFilter(django_filters.FilterSet):
 
 class AuthorFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr='icontains')
-    
+
     class Meta:
         model = Author
         fields = ['name']
@@ -45,4 +45,43 @@ class AuthorFilter(django_filters.FilterSet):
         queryset = super().filter_queryset(queryset)
         return queryset.order_by('name')  
 
+
+
   
+class MemberFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(lookup_expr='icontains')
+    membership_type = django_filters.ChoiceFilter(choices=MEMBERSHIP_TYPE_CHOICES)
+    address = django_filters.CharFilter(lookup_expr='icontains')
+    borrows_book = django_filters.CharFilter(method='filter_by_borrows_book')
+    
+    class Meta:
+        model = Member
+        fields = ['name' , 'membership_type' , 'address' , 'borrows_book']
+    
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        return queryset.order_by('name')
+    
+    def filter_by_borrows_book(self, queryset, name, value):
+        return queryset.filter(borrows__book__title__icontains=value).distinct()
+
+class BorrowFilter(django_filters.FilterSet):
+    member = django_filters.CharFilter(method='filter_by_member_name')
+    book = django_filters.CharFilter(method='filter_by_book_title')
+    borrow_date = django_filters.DateFilter()
+    return_date = django_filters.DateFilter()
+    returned = django_filters.BooleanFilter()
+    
+    class Meta:
+        model = Borrow
+        fields = ['member' , 'book' , 'borrow_date' , 'return_date' , 'returned']
+    
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        return queryset.order_by('borrow_date')
+    
+    def filter_by_member_name(self, queryset, name, value):
+        return queryset.filter(member__name__icontains=value)
+    
+    def filter_by_book_title(self, queryset, name, value):
+        return queryset.filter(book__title__icontains=value)

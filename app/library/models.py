@@ -7,6 +7,10 @@ from django.utils.timezone import now
 from django.db import models
 from django.conf import settings
 
+MEMBERSHIP_TYPE_CHOICES = [
+    ('regular', 'Regular'),
+    ('premium', 'Premium'),
+]
 
 def upload_to_authors(instance, filename):
         ext = filename.split('.')[-1]
@@ -54,7 +58,7 @@ class Member(models.Model):
     address = models.TextField(blank=True, null=True)
     membership_type = models.CharField(
         max_length=50,
-        choices=[('regular', 'Regular'), ('premium', 'Premium')],
+        choices=MEMBERSHIP_TYPE_CHOICES,
         default='regular'
     )
     created_at = models.DateTimeField(default=now)

@@ -7,7 +7,7 @@ from .serializers import BookSerializer , CategorySerializer , AuthorSerializer 
 from rest_framework import viewsets , permissions , authentication
 from .models import Book , Category , Author , Member , Borrow , Review
 from rest_framework.viewsets import ModelViewSet
-from .filters import BookFilter , CategoryFilter , AuthorFilter
+from .filters import BookFilter , CategoryFilter , AuthorFilter , MemberFilter , BorrowFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -86,10 +86,14 @@ class MemberViewSet(ModelViewSet):
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [authentication.TokenAuthentication]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MemberFilter
 
 class BorrowViewSet(ModelViewSet):
     queryset = Borrow.objects.all()
     serializer_class = BorrowSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [authentication.TokenAuthentication]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = BorrowFilter
 
