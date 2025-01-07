@@ -15,6 +15,7 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -38,12 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Local apps
     'user',
     'library',
+    # Third party apps
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     'django_filters',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -164,3 +168,24 @@ REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
 SPECTACULAR_SETTINGS = {
 'COMPONENT_SPLIT_REQUEST':True,
 }
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://:redis@redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://:redis@redis:6379/0'
+
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "library.tasks.notify_overdue_books",
+        # every day once at 7:00 AM
+        "schedule": crontab(
+            minute=0,
+            hour=7,
+        ),
+    },
+}
+
+# For Task Results (Optional)

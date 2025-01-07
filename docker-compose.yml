@@ -39,7 +39,56 @@ services:
       - POSTGRES_DB=LibraryDB
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
+
+
+  redis:
+    image: "redis:alpine"
+    command: redis-server --requirepass redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - dev-redis-data:/data
+  
+  celery:
+    build:
+      context: .
+      args:
+        - DEV=true
+    env_file:
+      - .env
+    command: celery -A app worker --loglevel=info
+    volumes:
+      - ./app:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - DB_HOST=db
+      - DB_NAME=LibraryDB
+      - DB_USER=admin
+      - DB_PASS=admin
+    depends_on:
+      - redis
+  
+  celery-beat:
+    build:
+      context: .
+      args:
+        - DEV=true
+    env_file:
+      - .env
+    command: celery -A app beat --loglevel=info
+    volumes:
+      - ./app:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - DB_HOST=db
+      - DB_NAME=LibraryDB
+      - DB_USER=admin
+      - DB_PASS=admin
+    depends_on:
+      - redis
+    
 volumes:
   dev-db-data:
   # map static data to file in system
   dev-static-data:
+  dev-redis-data:
