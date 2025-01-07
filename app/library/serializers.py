@@ -19,7 +19,7 @@ class BookSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(required = False)
     class Meta:
         model = Book
-        fields = ['id','title', 'description', 'categories', 'author', 'cover', 'published_date']
+        fields = ['id','title', 'description', 'categories', 'author', 'cover', 'published_date' , 'available_copies']
     
     def create(self, validated_data):
         categories = validated_data.pop('categories' , [])
@@ -70,6 +70,14 @@ class BorrowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrow
         fields = ['id','member', 'book', 'borrow_date', 'return_date', 'returned']
+    
+    def create(self, validated_data):
+        book = validated_data['book']
+        if book.available_copies == 0:
+            raise serializers.ValidationError('No available copies of this book')
+        book.available_copies -= 1
+        book.save()
+        return Borrow.objects.create(**validated_data)
 
 
 

@@ -48,6 +48,8 @@ class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE , related_name='books' , null=True , blank=True)  
     categories = models.ManyToManyField(Category)
     cover = models.ImageField(upload_to=upload_to_books, blank=True, null=True)
+    available_copies = models.PositiveIntegerField(default=1)
+    
 
     def __str__(self):
         return self.title

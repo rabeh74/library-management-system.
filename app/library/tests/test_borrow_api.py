@@ -161,6 +161,41 @@ class TestBorrowAPI(APITestCase):
         response = self.client.get(url , {"borrow_date":'2022-01-01'})
         self.assertEqual(response.status_code , status.HTTP_200_OK)
         self.assertEqual(len(response.data) , 0)
+
+    def test_borrow_with_avaiable_copies(self):
+        book = Book.objects.create(title='test book' , available_copies=0)
+        member = Member.objects.create(name='test member')
+        url = reverse('library:borrow-list')
+        data = {
+            'book':book.id,
+            'member':member.id,
+            'borrow_date':'2021-01-01',
+            'return_date':'2021-01-15',
+            'returned':False,
+        }
+        response = self.client.post(url , data , format='json')
+        self.assertEqual(response.status_code , status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0] , 'No available copies of this book')
+
+
+        book = Book.objects.create(title='test book' , available_copies=2)
+        member = Member.objects.create(name='test member')
+        url = reverse('library:borrow-list')
+        data = {
+            'book':book.id,
+            'member':member.id,
+            'borrow_date':'2021-01-01',
+            'return_date':'2021-01-15',
+            'returned':False,
+        }
+        response = self.client.post(url , data , format='json')
+        self.assertEqual(response.status_code , status.HTTP_201_CREATED)
+        self.assertEqual(response.data['book'] , book.id)
+        self.assertEqual(response.data['member'] , member.id)
+        self.assertEqual(response.data['borrow_date'] , '2021-01-01')
+        self.assertEqual(response.data['return_date'] , '2021-01-15')
+        self.assertEqual(response.data['returned'] , False)
+        self.assertEqual(Book.objects.get(id=book.id).available_copies , 1)
         
 
     
