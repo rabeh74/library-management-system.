@@ -170,13 +170,41 @@ class TestBookApi(APITestCase):
                     'description':'test description',
                 }
             ],
-            'published_date':'2021-01-01',
+            
         }
         response = self.client.put(url , data , format='json')
         self.assertEqual(response.status_code , status.HTTP_200_OK)
         self.assertEqual(response.data['title'] , 'test book updated')
         self.assertEqual(response.data['author']['name'] , 'test author')
         self.assertEqual(response.data['categories'][0]['name'] , 'test category')
+    
+    def test_partial_update_book(self):
+        url = reverse('library:book-list')
+        data = {
+            'title':'test book',
+            'description':'test description',
+            'author':{
+                'name':'test author',
+                'bio':'test bio',
+                'birth_date':'2021-01-01',
+            },
+            'categories':[
+                {
+                    'name':'test category',
+                    'description':'test description',
+                }
+            ],
+            'published_date':'2021-01-01',
+        }
+        response = self.client.post(url , data , format='json')
+        url = reverse('library:book-detail' , kwargs={'pk':response.data['id']})
+        data = {
+            'title':'test book updated',
+        }
+        response = self.client.patch(url , data , format='json')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+        self.assertEqual(response.data['title'] , 'test book updated')
+        self.assertEqual(response.data['author']['name'] , 'test author')
     
     def test_update_book_with_image(self):
        

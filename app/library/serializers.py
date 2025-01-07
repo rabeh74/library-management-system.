@@ -21,6 +21,7 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = ['id','title', 'description', 'categories', 'author', 'cover', 'published_date' , 'available_copies']
     
+
     def create(self, validated_data):
         categories = validated_data.pop('categories' , [])
         author_data = validated_data.pop('author' , None)
@@ -61,6 +62,8 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = ['id','name', 'phone', 'address', 'membership_type', 'created_at', 'created_by']
     
+
+
     def create(self, validated_data):
         user = self.context['request'].user
         validated_data['created_by'] = user
@@ -71,6 +74,11 @@ class BorrowSerializer(serializers.ModelSerializer):
         model = Borrow
         fields = ['id','member', 'book', 'borrow_date', 'return_date', 'returned']
     
+    def __init__(self, *args, **kwargs):
+        kwargs['partial'] = True
+        super().__init__(*args, **kwargs)
+        
+
     def create(self, validated_data):
         book = validated_data['book']
         if book.available_copies == 0:
@@ -78,8 +86,16 @@ class BorrowSerializer(serializers.ModelSerializer):
         book.available_copies -= 1
         book.save()
         return Borrow.objects.create(**validated_data)
-
-
-
     
+    def update(self, instance, validated_data):
+        book = instance.book
+        returned = validated_data.get('returned' , False)
+        if returned:
+            book.available_copies += 1
+            book.save()
+        for key , value in validated_data.items():
+            setattr(instance , key , value)
+        
+        instance.save()
+        return instance
     

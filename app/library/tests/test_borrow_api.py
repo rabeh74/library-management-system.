@@ -196,6 +196,33 @@ class TestBorrowAPI(APITestCase):
         self.assertEqual(response.data['return_date'] , '2021-01-15')
         self.assertEqual(response.data['returned'] , False)
         self.assertEqual(Book.objects.get(id=book.id).available_copies , 1)
+    
+    def test_borrow_returned_to_increase_copies(self):
+        book = Book.objects.create(title='test book' , available_copies=2)
+        member = Member.objects.create(name='test member')
+        url = reverse('library:borrow-list')
+        data = {
+            'book':book.id,
+            'member':member.id,
+            'borrow_date':'2021-01-01',
+            'return_date':'2021-01-15',
+            'returned':False,
+        }
+        response = self.client.post(url , data , format='json')
+        self.assertEqual(response.status_code , status.HTTP_201_CREATED)
+        book.refresh_from_db()
+        self.assertEqual(book.available_copies , 1)
+
+        data ={
+            "returned":True ,
+        }
         
 
-    
+        url = reverse('library:borrow-detail' , kwargs={'pk':response.data['id']})
+        response = self.client.put(url , data , format='json')
+        self.assertEqual(response.status_code , status.HTTP_200_OK)
+
+        book.refresh_from_db()
+        self.assertEqual(Book.objects.get(id=book.id).available_copies , 2)
+
+        
