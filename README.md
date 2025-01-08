@@ -66,12 +66,12 @@ The **Library Management System** is a comprehensive application designed to man
 
 4. Apply database migrations:
    ```bash
-   docker-compose exec app python manage.py migrate
+   docker-compose run app python manage.py migrate
    ```
 
 5. Create a superuser to access the admin panel:
    ```bash
-   docker-compose exec app python manage.py createsuperuser
+   docker-compose run app python manage.py createsuperuser
    ```
 
 6. Access the application:
@@ -82,7 +82,7 @@ The **Library Management System** is a comprehensive application designed to man
 ## Testing
 Run the test suite:
 ```bash
-   docker-compose exec app python manage.py test
+   docker-compose run app python manage.py test
 ```
 
 ---
